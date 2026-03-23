@@ -60,6 +60,29 @@ app.get("/api/users/:id", async (req, res) => {
         });
     }
 });
+app.get("/search", async (req, res) => {
+    try {
+        const { name } = req.query;
+
+        const user = await User.find({ name: { $regex: name, $options: "i" } });
+
+        // if user not found
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            message: "User fetched successfully",
+            data: user
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error fetching user",
+            error: error.message
+        });
+    }
+});
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
