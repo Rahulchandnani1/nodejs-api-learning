@@ -3,7 +3,8 @@ const express=require("express");
 const app=express();
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
-
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 dotenv.config();
 connectDB();
 app.use(express.json());
@@ -125,7 +126,38 @@ app.delete("/api/users/:id", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+app.post("/api/signup", async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
 
+        // validation
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "All fields required" });
+        }
+
+        // check existing user
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = new User({
+            name,
+            email,
+            password: hashedPassword
+        });
+
+        await user.save();
+
+        res.status(201).json({ message: "User registered successfully" });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 const PORT = 3000;
 app.listen(PORT, () => {
