@@ -7,6 +7,22 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 dotenv.config();
 connectDB();
+const multer = require("multer");
+const path = require("path");
+
+// storage config
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = Date.now() + path.extname(file.originalname);
+        cb(null, uniqueName);
+    }
+});
+
+const upload = multer({ storage });
+
 app.use(express.json());
 
 app.get("/test",(req,res)=>{
@@ -61,6 +77,17 @@ app.get("/api/users/:id", async (req, res) => {
         });
     }
 });
+app.post("/api/upload", upload.single("file"), (req, res) => {
+    try {
+        res.status(200).json({
+            message: "File uploaded successfully",
+            file: req.file
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get("/search", async (req, res) => {
     try {
         const { name } = req.query;
