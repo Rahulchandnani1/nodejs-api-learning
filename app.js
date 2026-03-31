@@ -77,6 +77,24 @@ app.get("/api/users/:id", async (req, res) => {
         });
     }
 });
+app.get("/api/search", async (req, res) => {
+    try {
+        const { name, email } = req.query;
+
+        let filter = {};
+
+        if (name) filter.name = { $regex: name, $options: "i" };
+        if (email) filter.email = { $regex: email, $options: "i" };
+
+        const users = await User.find(filter);
+
+        res.json({ count: users.length, data: users });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post("/api/upload", upload.single("file"), (req, res) => {
     try {
         res.status(200).json({
@@ -88,29 +106,29 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
     }
 });
 
-app.get("/search", async (req, res) => {
-    try {
-        const { name } = req.query;
+// app.get("/search", async (req, res) => {
+//     try {
+//         const { name } = req.query;
 
-        const user = await User.find({ name: { $regex: name, $options: "i" } });
+//         const user = await User.find({ name: { $regex: name, $options: "i" } });
 
-        // if user not found
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+//         // if user not found
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
 
-        res.status(200).json({
-            message: "User fetched successfully",
-            data: user
-        });
+//         res.status(200).json({
+//             message: "User fetched successfully",
+//             data: user
+//         });
 
-    } catch (error) {
-        res.status(500).json({
-            message: "Error fetching user",
-            error: error.message
-        });
-    }
-});
+//     } catch (error) {
+//         res.status(500).json({
+//             message: "Error fetching user",
+//             error: error.message
+//         });
+//     }
+// });
 app.put("/api/users/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -185,6 +203,7 @@ app.post("/api/signup", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 app.post("/api/login", async (req, res) => {
     try {
         const { email, password } = req.body;
