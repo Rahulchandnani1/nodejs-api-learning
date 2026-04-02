@@ -21,6 +21,35 @@ const storage = multer.diskStorage({
     }
 });
 
+const authMiddleware = (req, res, next) => {
+    try {
+        const token = req.headers.authorization;
+
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const decoded = jwt.verify(token, "your_secret_key");
+
+        req.user = decoded;
+        next();
+
+    } catch (error) {
+        res.status(401).json({ message: "Invalid token" });
+    }
+};
+app.get("/api/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
+
+        res.json(user);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 const upload = multer({ storage });
 
 app.use(express.json());
