@@ -123,6 +123,31 @@ app.get("/api/search", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+app.post("/api/fileupload", authMiddleware, upload.single("file"), async (req, res) => {
+    try {
+        const file = req.file;
+
+        const newFile = new File({
+            userId: req.user.id, // 🔥 logged-in user
+            originalName: file.originalname,
+            fileName: file.filename,
+            filePath: file.path,
+            fileType: file.mimetype,
+            fileSize: file.size
+        });
+
+        await newFile.save();
+
+        res.status(201).json({
+            message: "File uploaded",
+            fileId: newFile._id
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 app.post("/api/upload", upload.single("file"), (req, res) => {
     try {
