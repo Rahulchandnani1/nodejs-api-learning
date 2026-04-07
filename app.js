@@ -147,6 +147,35 @@ app.post("/api/fileupload", authMiddleware, upload.single("file"), async (req, r
         res.status(500).json({ error: error.message });
     }
 });
+app.post("/api/upload-multiple", authMiddleware, upload.array("files", 5), async (req, res) => {
+    try {
+        const files = req.files;
+
+        const savedFiles = [];
+
+        for (let file of files) {
+            const newFile = new File({
+                userId: req.user.id,
+                originalName: file.originalname,
+                fileName: file.filename,
+                filePath: file.path,
+                fileType: file.mimetype,
+                fileSize: file.size
+            });
+
+            await newFile.save();
+            savedFiles.push(newFile._id);
+        }
+
+        res.status(201).json({
+            message: "Files uploaded successfully",
+            fileIds: savedFiles
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
 app.post("/api/upload", upload.single("file"), (req, res) => {
